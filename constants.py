@@ -38,6 +38,8 @@ class Constants:
 
     # --------------------- MODEL SPECIFIC CONSTANTS ---------------------
     OMNIVORE = "omnivore"
+    EGOVLP = "egovlp"
+    PERCEPTION_ENCODER = "perception_encoder"
     RESNET3D = "3dresnet"
     X3D = "x3d"
     SLOWFAST = "slowfast"

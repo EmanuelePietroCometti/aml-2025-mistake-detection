@@ -243,13 +243,36 @@ class CaptainCookStepDataset(Dataset):
         return step_features, step_labels
 
     def _get_video_features(self, recording_id, step_start_end_list):
-        features_path = os.path.join(self._config.segment_features_directory, "video", self._backbone,
-                                         f'{recording_id}_360p.mp4_1s_1s.npz')
-        features_data = np.load(features_path)
-        recording_features = features_data['arr_0']
-
-        step_features, step_labels = self._build_modality_step_features_labels(recording_features, step_start_end_list)
-        features_data.close()
+        if self._backbone in [const.OMNIVORE, const.SLOWFAST]:
+            features_path = os.path.join(
+                self._config.segment_features_directory,
+                "video",
+                self._backbone,
+                f'{recording_id}_360p.mp4_1s_1s.npz'
+            )
+            features_data = np.load(features_path)
+            recording_features = features_data['arr_0']
+        elif self._backbone == const.EGOVLP:
+            features_path = os.path.join(
+                self._config.segment_features_directory,
+                "video",
+                "egovlp",
+                f'{recording_id}.npy'
+            )
+            recording_features = np.load(features_path)
+        elif self._backbone == const.PERCEPTION_ENCODER:
+            features_path = os.path.join(
+                self._config.segment_features_directory,
+                "video",
+                "perception_encoder",
+                f'{recording_id}.pt'
+            )
+            recording_features = torch.load(features_path).numpy()
+        else:
+            raise ValueError(f"Unsupported backbone: {self._backbone}")
+        step_features, step_labels = self._build_modality_step_features_labels(
+            recording_features, step_start_end_list
+        )
         return step_features, step_labels
 
     def __getitem__(self, idx):
@@ -259,7 +282,7 @@ class CaptainCookStepDataset(Dataset):
         step_features = None
         step_labels = None
         
-        assert self._backbone in [const.OMNIVORE, const.SLOWFAST], "Only Omnivore and SlowFast are supported with this codebase"
+        assert self._backbone in [const.OMNIVORE, const.SLOWFAST, const.EGOVLP, const.PERCEPTION_ENCODER], "Only Omnivore and SlowFast are supported with this codebase"
         step_features, step_labels = self._get_video_features(recording_id, step_start_end_list)
 
         assert step_features is not None, f"Features not found for recording_id: {recording_id}"

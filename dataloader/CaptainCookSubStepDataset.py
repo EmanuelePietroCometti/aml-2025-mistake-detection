@@ -58,10 +58,18 @@ class CaptainCookSubStepDataset(Dataset):
         recording_id = self._sub_step_dict[idx][0]
         start_time, end_time = self._sub_step_dict[idx][1]
         has_errors = self._sub_step_dict[idx][2]
-
-        features_path = os.path.join(self._features_directory, self._backbone, f'{recording_id}_360p.mp4_1s_1s.npz')
-        features_data = np.load(features_path)
-        recording_features = features_data['arr_0']
+        if self._backbone in ["omnivore", "slowfast"]:
+            features_path = os.path.join(self._features_directory, self._backbone, f'{recording_id}_360p.mp4_1s_1s.npz')
+            features_data = np.load(features_path)
+            recording_features = features_data['arr_0']
+        elif self._backbone == "egovlp":
+            features_path = os.path.join(self._features_directory, self._backbone, f'{recording_id}.npy')
+            features_data = np.load(features_path)
+        elif self._backbone == "perception_encoder":
+            features_path = os.path.join(self._features_directory, self._backbone, f'{recording_id}.pt')
+            features_data = torch.load(features_path).numpy()
+        else:
+            raise ValueError(f"Backbone {self._backbone} not supported for sub-step dataset.") 
 
         sub_step_features = recording_features[start_time:end_time]
         sub_step_features = torch.from_numpy(sub_step_features).float()
